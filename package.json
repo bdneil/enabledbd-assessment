@@ -1,0 +1,17 @@
+{
+  "name": "enabledbd-assessment",
+  "version": "1.0.0",
+  "description": "EnabledBD business-development self-assessment: static front-end + serverless PDF generation and lead capture.",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo \"No build step — static site + functions\""
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "^131.0.0",
+    "puppeteer-core": "^23.11.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

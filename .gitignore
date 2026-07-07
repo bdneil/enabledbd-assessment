@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+# local secrets — never commit
+HL.env.txt
+.netlify/
+*.log
+.DS_Store
+
+# generated test outputs
+test/out/

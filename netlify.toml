@@ -1,0 +1,23 @@
+# Netlify configuration for the EnabledBD assessment.
+
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  # Keep the big native/binary deps out of the esbuild bundle.
+  external_node_modules = ["@sparticuz/chromium", "puppeteer-core"]
+  # Package the shared stylesheet + self-hosted fonts so the PDF function can
+  # read them at runtime and inline the fonts as base64.
+  included_files = ["public/assets/styles.css", "public/assets/fonts.css", "public/assets/fonts/*.woff2"]
+
+# Give the PDF function extra headroom for cold starts (Chromium boot).
+[functions.generate-pdf]
+  # Netlify synchronous functions cap at 26s on paid plans (10s on free).
+  # If long documents ever approach the limit, convert to a background function.
+  timeout = 26
+
+[dev]
+  publish = "public"
+  functions = "netlify/functions"
