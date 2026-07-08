@@ -64,7 +64,7 @@ function buildDocument(innerHtml) {
 
 const FOOTER = `
 <div style="font-family:'Hanken Grotesk',Arial,sans-serif;font-size:8px;color:#6c7488;width:100%;padding:0 12mm;display:flex;justify-content:space-between;align-items:center;">
-  <span>EnabledBD · Business Development Playbook</span>
+  <span>© 2026 EnabledBD. All rights reserved.</span>
   <span>${SITE_URL}</span>
   <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
 </div>`;

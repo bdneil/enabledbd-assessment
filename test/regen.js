@@ -49,6 +49,7 @@ async function renderFixture(page, fx) {
     document.querySelectorAll('.capFill').forEach(e => e.style.width = lastR.capacity + '%');
     const bf = document.getElementById('batFill'); if (bf) bf.style.width = lastR.battery + '%';
     document.querySelectorAll('.ext .track > i').forEach(e => e.style.width = e.getAttribute('data-w') + '%');
+    document.querySelectorAll('.rvUp').forEach(e => e.classList.add('rvIn'));   // reveal staged blocks so the summary PDF isn't blank
     const summary = app.innerHTML;
     // 2) full playbook (renderPlaybook overwrites #app, exposes #pbdoc)
     renderPlaybook(lastR);
@@ -180,7 +181,72 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   await gotGate;
   const gateLead = JSON.parse(gateBody);
 
+  // ---- capture artifacts for the new-item checks (reveal / compare / share / gate / disclaimer / edge) ----
+  const OUTART = path.join(OUT, 'artifacts'); fs.mkdirSync(OUTART, { recursive: true });
+  const capPage = await browser.newPage();
+  await capPage.setViewport({ width: 760, height: 1000, deviceScaleFactor: 2 });
+  await capPage.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle0' });
+  const ocFx = fixtures.find(f => f.name === 'owner-connector');
+  // (1) reveal sequence — non-reduced: hero first, then the rest flows in
+  await capPage.evaluate((ans, u) => {
+    for (const k in answers) delete answers[k];
+    Object.assign(answers, ans); user.name = u.name || ''; user.email = ''; user.industry = u.industry || '';
+    lastR = computeResults(); finish();
+  }, ocFx.answers, ocFx.user);
+  await new Promise(r => setTimeout(r, 250));  await capPage.screenshot({ path: path.join(OUTART, 'reveal-1-reading-or-hero.png') });
+  await new Promise(r => setTimeout(r, 1500)); await capPage.screenshot({ path: path.join(OUTART, 'reveal-2-hero.png') });
+  await new Promise(r => setTimeout(r, 1800)); await capPage.screenshot({ path: path.join(OUTART, 'reveal-3-rest.png') });
+  // (2) summary artifacts + share payload + gate + encoded r
+  const cap = await capPage.evaluate((ans, u) => {
+    for (const k in answers) delete answers[k];
+    Object.assign(answers, ans); user.name = u.name || ''; user.email = ''; user.industry = u.industry || '';
+    lastR = computeResults(); renderResults(lastR);
+    document.querySelectorAll('.rvUp').forEach(e => e.classList.add('rvIn'));
+    const summary = app.innerHTML;
+    const encoded = encodeResult(lastR);
+    const shareCalls = [];
+    window.open = (u) => { shareCalls.push(u); return null; };
+    window.prompt = (m, v) => { shareCalls.push('PROMPT:' + v); return null; };
+    try { if (navigator.clipboard) navigator.clipboard.writeText = (t) => { shareCalls.push('COPY:' + t); return Promise.resolve(); }; } catch (_) {}
+    const sb = document.getElementById('shareBtn'); if (sb) sb.click();          // open the menu
+    Array.prototype.forEach.call(document.querySelectorAll('.shareOpt'), el => el.click());  // LinkedIn, X, Copy
+    showGate();
+    return { summary, gate: app.innerHTML, shareCalls, encoded, primary: lastR.primary };
+  }, ocFx.answers, ocFx.user);
+  // gate screenshot (privacy line)
+  await capPage.screenshot({ path: path.join(OUTART, 'gate-privacy.png') });
+  // summary disclaimer screenshot (render summary, scroll to bottom)
+  await capPage.evaluate((ans, u) => {
+    for (const k in answers) delete answers[k];
+    Object.assign(answers, ans); user.name = u.name || ''; user.email = ''; user.industry = u.industry || '';
+    lastR = computeResults(); renderResults(lastR);
+    document.querySelectorAll('.rvUp').forEach(e => e.classList.add('rvIn'));
+    const d = document.querySelector('.resDisclaimer'); if (d) d.scrollIntoView();
+  }, ocFx.answers, ocFx.user);
+  await new Promise(r => setTimeout(r, 150)); await capPage.screenshot({ path: path.join(OUTART, 'summary-disclaimer.png') });
+  // (3) reduced-motion: everything visible, in order, no hero viewport-hog
+  await capPage.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  const rm = await capPage.evaluate((ans, u) => {
+    for (const k in answers) delete answers[k];
+    Object.assign(answers, ans); user.name = u.name || ''; user.email = ''; user.industry = u.industry || '';
+    lastR = computeResults(); finish();          // reduced-motion path skips the reading beat
+    const ups = [].slice.call(document.querySelectorAll('.revealRest .rvUp'));
+    const hidden = ups.filter(e => getComputedStyle(e).opacity !== '1').length;
+    const heroMin = getComputedStyle(document.querySelector('.revealHero')).minHeight;
+    return { total: ups.length, hidden, heroMin, isReading: !!document.querySelector('.reading') };
+  }, ocFx.answers, ocFx.user);
+  await new Promise(r => setTimeout(r, 150)); await capPage.screenshot({ path: path.join(OUTART, 'reduced-motion.png') });
+
   await browser.close(); server.close();
+
+  // ---- edge OG logic (item 6): decode a real ?r= to style, inject per-style tags ----
+  const oglib = await import('../netlify/edge-functions/og-lib.mjs');
+  const HOST = 'https://preview.example.netlify.app';
+  const indexHtml = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
+  const ogStyleFromR = oglib.styleFromR(cap.encoded);
+  const ogFromS = oglib.normalizeStyle('powerhouse');
+  const ogHtml = oglib.rewriteHtml(indexHtml, HOST, ogStyleFromR);
+  const genpdfSrc = fs.readFileSync(path.join(ROOT, 'netlify/functions/generate-pdf.js'), 'utf8');
 
   // Feed the intercepted gate payload through capture-lead with a MOCK sheet endpoint,
   // proving the raw style scores land in a sheet row (destination-agnostic).
@@ -333,6 +399,49 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   checks.push(['no "The"+zone leak in any of F-A..F-D', P.every(p => sig[p].theZone.length === 0)]);
   checks.push(['no unresolved (?) signal in F-A..F-D',
     P.every(p => !['energy','p5close','stick1','leadIn','stretch','cover'].some(k => String(sig[p][k]).includes('?')))]);
+
+  // ================= THIS SESSION: legal/trust · reveal · compare · share · OG =================
+  const launchStart = checks.length;
+  const DISC = 'not a validated psychometric instrument';
+  const sumHtml = cap.summary;
+  checks.push(['item2 · disclaimer on summary (web)', sumHtml.includes(DISC)]);
+  checks.push(['item2 · disclaimer in playbook What\'s Next (PDF)', htmlByName['owner-connector'].includes(DISC)]);
+  checks.push(['item3 · gate privacy line (exact)', cap.gate.includes("plus a short series of emails to help you run it") && cap.gate.includes("We don't sell or share your information")]);
+  checks.push(['item3 · gate Privacy Policy link → privacy-policy/', cap.gate.includes('privacy-policy/') && cap.gate.includes('>Privacy Policy</a>')]);
+  checks.push(['item4 · copyright in SITE footer', indexHtml.includes('© 2026 EnabledBD. All rights reserved.')]);
+  checks.push(['item4 · copyright in PDF footer', genpdfSrc.includes('© 2026 EnabledBD. All rights reserved.')]);
+  const shareImgs = ['connector','driver','educator','powerhouse','generic'];
+  const missingImgs = shareImgs.filter(s => !fs.existsSync(path.join(ROOT,'public/static/share',s+'.png')));
+  checks.push(['item5 · five share images exist', missingImgs.length===0]);
+  checks.push(['item6 · landing og:title = "What\'s your BD style?"', indexHtml.includes('og:title" content="What\'s your BD style?"')]);
+  checks.push(['item6 · landing og:image = generic.png', indexHtml.includes('/static/share/generic.png')]);
+  checks.push(['item6 · edge decodes ?r= → style (connector)', ogStyleFromR === 'connector']);
+  checks.push(['item6 · edge normalizes ?s= (powerhouse)', ogFromS === 'powerhouse']);
+  checks.push(['item6 · edge injects per-style og:image', ogHtml.includes(HOST+'/static/share/connector.png')]);
+  checks.push(['item6 · edge injects per-style og:title', ogHtml.includes('content="You\'re a Connector."')]);
+  checks.push(['item6 · edge rewrites host (no hardcoded domain left)', !ogHtml.includes('https://assessment.enabledbd.com')]);
+  checks.push(['item6 · OG never leaks zone/battery/name', !/og:[a-z]+"\s+content="[^"]*(Growth Partner|Emerging Developer|Rising Rainmaker|battery|Ava|Ben|Cara|Dev)/i.test(ogHtml)]);
+  const sc = cap.shareCalls || [];
+  const li = sc.find(u => /linkedin\.com\/sharing/.test(u)) || '';
+  const xx = sc.find(u => /twitter\.com\/intent/.test(u)) || '';
+  const cp = sc.find(u => /^(COPY|PROMPT):/.test(u)) || '';
+  const xDec = decodeURIComponent(xx);
+  checks.push(['item7 · share button + explicit LinkedIn·X·Copy options', sumHtml.includes('id="shareBtn"') && sumHtml.includes("shareTo('linkedin')") && sumHtml.includes("shareTo('x')") && sumHtml.includes("shareTo('copy')")]);
+  checks.push(['item7 · LinkedIn shares ?s= landing, no ?r=', /s%3Dconnector/.test(li) && !/r%3D/.test(li)]);
+  checks.push(['item7 · X shares ?s= + prefilled text, no ?r=', /s%3Dconnector/.test(xx) && xDec.includes("I'm a Connector.") && !/[?&]r=/.test(xDec)]);
+  checks.push(['item7 · Copy = "I\'m a Connector..." + ?s=, no ?r=', /:I'm a Connector\./.test(cp) && cp.includes('?s=connector') && !cp.includes('?r=')]);
+  checks.push(['compare · three-styles strip present', sumHtml.includes('stylesCompare') && sumHtml.includes('The three styles')]);
+  checks.push(['compare · reader\'s style marked (you)', sumHtml.includes('sc-you')]);
+  checks.push(['item8 · reveal hero + rest structure', sumHtml.includes('revealHero') && sumHtml.includes('revealRest')]);
+  checks.push(['item8 · reduced-motion: all rest blocks visible', rm.hidden===0 && rm.total>0]);
+  checks.push(['item8 · reduced-motion: no viewport-hog, no reading beat', rm.heroMin==='0px' && rm.isReading===false]);
+
+  console.log('\n=== THIS SESSION — item × check ===');
+  checks.slice(launchStart).forEach(([name, ok]) => console.log('  ' + (ok ? 'PASS ✓  ' : 'FAIL ✗  ') + name));
+  console.log('\n  OG decode: ?r=(owner-connector) →', ogStyleFromR, '| ?s=powerhouse →', ogFromS);
+  console.log('  share targets:', JSON.stringify(cap.shareCalls));
+  console.log('  reduced-motion: rest blocks', rm.total, '| hidden', rm.hidden, '| hero min-height', rm.heroMin);
+  console.log('  artifacts written to', OUTART);
 
   console.log('\n=== PROOF assertions ===');
   checks.forEach(([name, ok]) => console.log((ok ? 'PASS ✓  ' : 'FAIL ✗  ') + name));

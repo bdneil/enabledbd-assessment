@@ -16,7 +16,15 @@ const POP_STAT_PCT = { connector:'', driver:'', educator:'', powerhouse:'' }; //
 const CONTACT_EMAIL = 'neil@enabledbd.com';
 const PODCAST_URL   = 'https://www.youtube.com/channel/UCdR27kr5kwGS0d55tgbKbyg';
 const LINKEDIN_URL  = 'https://www.linkedin.com/in/neil-barrow/';
-const PRIVACY_URL   = 'https://enabledbd.com/privacy';   // set to '' to hide the gate Privacy link
+const PRIVACY_URL   = 'https://enabledbd.com/privacy-policy/';   // set to '' to hide the gate Privacy link
+/* Instrument disclaimer, shown at the bottom of the summary (web) and in the playbook What's Next (web + PDF). */
+const DISCLAIMER_TEXT = "This is a self-assessment built from years of working with professional-services firms, a planning tool, not a validated psychometric instrument, and not professional advice. It's your starting point, not a verdict.";
+/* Short third-person lines for the "three styles" comparison strip on the result page. */
+const COMPARE_LINE = {
+  connector:"Grows business through people, the intros, the coffees, the relationships.",
+  driver:"Grows business by opening doors, starting the conversation and making the ask.",
+  educator:"Grows business by being known for what they know, ideas that pull the right people in."
+};
 
 /* EnabledBD brand mark (reconstructed as vector so it stays crisp in the PDF):
    two-tone green spire encircled by the gray ring. */
@@ -627,11 +635,12 @@ ${builder ? `
       <div class="sec">The newsletter, more BD like this, once a month. <a href="#" onclick="subscribeNewsletter(event,this)">Subscribe</a>.</div>
       <div class="sec">Follow along: <a href="${PODCAST_URL}" target="_blank" rel="noopener">the podcast</a> · <a href="${LINKEDIN_URL}" target="_blank" rel="noopener">LinkedIn</a></div>
     </div>
-    <p class="pbp" style="text-align:center;color:var(--muted);font-style:italic">You already know enough people to grow, go make the first call.</p></div>`;
+    <p class="pbp" style="text-align:center;color:var(--muted);font-style:italic">You already know enough people to grow, go make the first call.</p>
+    <p class="pbdisclaimer" style="font-size:11px;color:var(--muted);margin-top:22px;line-height:1.5">${DISCLAIMER_TEXT}</p></div>`;
 
   app.innerHTML=`<div class="pbtoolbar"><button class="btn btn-ghost" onclick="backToSummary()">← Back to summary</button><div style="display:flex;gap:6px;align-items:center"><button class="btn btn-ghost" onclick="window.print()">Print</button><button class="btn btn-primary" id="dlPdfBtn" onclick="downloadPlaybookPDF()">Download playbook (PDF)</button></div></div>
     <div class="pb"><div class="doc" id="pbdoc">
-      <div class="pbcover"><div style="margin-bottom:12px">${BRANDMARK(52)}</div><div class="k">EnabledBD · Business Development Playbook</div><h1 style="color:${headColor}">You're ${coverArt} ${coverStyle}.</h1><div class="signature" style="margin:2px 0 0">${signatureLine(r)}</div><div class="who">${user.name?user.name+' · ':''}${user.industry||'Professional services'}</div><p class="coverline">Your personal BD plan, built for how you actually work.</p><div class="pyramidWrap" style="margin:16px 0 6px">${pyramidSVG(focusPillar)}</div><div class="coverstats"><div class="cstat"><div class="cnum">71%</div><div class="clab">of buyers find firms through referrals and word of mouth</div></div><div class="cstat"><div class="cnum">79%</div><div class="clab">of clients would buy more from a firm they already use</div></div>${builder?`<div class="cstat"><div class="cnum">80%+</div><div class="clab">of buyers visit your website before deciding to engage</div></div>`:`<div class="cstat"><div class="cnum">~50%</div><div class="clab">of clients don't know everything you could help them with</div></div>`}</div><p class="coversource" style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center">Sources: Hinge Research.</p></div>
+      <div class="pbcover"><div style="margin-bottom:12px">${BRANDMARK(52)}</div><div class="k">EnabledBD · Business Development Playbook</div><h1 style="color:${headColor}">You're ${coverArt} ${coverStyle}.</h1><div class="signature" style="margin:2px 0 0">${signatureLine(r)}</div><div class="who">${user.name?user.name+' · ':''}${user.industry||'Professional services'}</div><p class="coverline">Your personal BD plan, built for how you actually work.</p><div class="pyramidWrap" style="margin:16px 0 6px">${pyramidSVG(focusPillar)}</div><div class="coverstats"><div class="cstat"><div class="cnum">71%</div><div class="clab">of buyers find firms through referrals and word of mouth</div></div><div class="cstat"><div class="cnum">79%</div><div class="clab">of clients would buy more from a firm they already use</div></div>${builder?`<div class="cstat"><div class="cnum">80%+</div><div class="clab">of buyers visit your website before deciding to engage</div></div>`:`<div class="cstat"><div class="cnum">~50%</div><div class="clab">of clients don't know everything you could help them with</div></div>`}</div><p class="coversource" style="font-size:11px;color:var(--muted);margin-top:10px;text-align:center">Source: Hinge Research Institute.</p></div>
       ${contents}${pre}${p1}${whyGoal}${plists}${p2}${operating}${ap}${convo}${reading}${p6}
     </div></div>`;
   window.scrollTo(0,0);
@@ -824,7 +833,15 @@ function computeResults(){
   const discrepancy = (!integrated && (noneRecent || !s0Styles.has(primary))) ? primary : null;
   return {track,ext,radar,maturity,appetite,capacity,battery,cadence,primary,secondary,foundationLed,integrated,zone,zones,solo,noneRecent,discrepancy};
 }
-function finish(){lastR=computeResults();renderResults(lastR);}
+function finish(){
+  lastR=computeResults();
+  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){ renderResults(lastR); return; }               // no transition theater under reduced motion
+  pWrap.style.display='none';
+  app.innerHTML=`<div class="reading"><div class="readingInner"><div class="readingDot"></div><div class="readingTxt">Reading your answers…</div></div></div>`;
+  window.scrollTo(0,0);
+  setTimeout(function(){ renderResults(lastR); }, 1000);     // one ~1s beat, then the reveal
+}
 
 function pyramidSVG(focusKey){
   // Clients = foundation slab; Referral + Prospect = two pillars standing on it in
@@ -856,6 +873,37 @@ function pyramidSVG(focusKey){
 function pillarsFig(focusKey,builder){
   const cap=builder?"Start with the people who see your work. The pillars come as you grow.":"Start with clients. Extend into your pillar, you don't need all of them.";
   return `<div class="pyramidWrap">${pyramidSVG(focusKey)}</div><p class="figcap">${cap}</p>`;
+}
+/* "The three styles" comparison strip, reader's own highlighted; teaches the pillars. */
+function stylesCompare(r){
+  const cards=['connector','driver','educator'].map(k=>{
+    const me=!r.integrated && k===r.primary;
+    return `<div class="scard${me?' me':''}"><div class="sc-h"><b style="color:${EXT[k].color}">${EXT[k].name.replace('The ','')}</b><span class="sc-pill">${EXT[k].pillar}</span>${me?'<span class="sc-you">you</span>':''}</div><div class="sc-d">${COMPARE_LINE[k]}</div></div>`;
+  }).join('');
+  const pow=r.integrated
+    ? `<p class="sc-note"><b>You're a Powerhouse</b>, strong across all three. Rare, and the reason your plan is about focus, not range.</p>`
+    : `<p class="sc-note">A rare few are strong across all three at once. That's a <b>Powerhouse</b>.</p>`;
+  return `<div class="stylesCompare"><div class="sc-lead">The three styles</div><div class="sc-grid">${cards}</div>${pow}</div>`;
+}
+/* Share affordance (item 7): shares a STYLE-ONLY landing link (?s=), never the ?r= playbook.
+   Explicit options so the reader always knows their choices (LinkedIn is the primary channel). */
+function shareData(){
+  const style=styleHeadline(lastR), art=styleArticle(style);
+  const skey=lastR.integrated?'powerhouse':lastR.primary;
+  return { url:location.origin+location.pathname+'?s='+skey,
+           text:`I'm ${art} ${style}. Took the EnabledBD assessment, worth 5 minutes:` };
+}
+function shareStyle(){ const m=document.getElementById('shareMenu'); if(m) m.style.display=(m.style.display==='flex'?'none':'flex'); }
+function shareTo(where){
+  if(!lastR) return;
+  const {url,text}=shareData();
+  if(where==='linkedin') window.open('https://www.linkedin.com/sharing/share-offsite/?url='+encodeURIComponent(url),'_blank','noopener');
+  else if(where==='x') window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(url),'_blank','noopener');
+  else if(where==='copy'){
+    const full=text+' '+url, c=document.getElementById('copyBtn');
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(full).then(()=>{if(c)c.textContent='Copied ✓';}).catch(()=>window.prompt('Copy your share link:',full));
+    else window.prompt('Copy your share link:', full);
+  }
 }
 
 function renderResults(r){
@@ -896,37 +944,55 @@ function renderResults(r){
   const foundationTitle = builder?"Your team-and-client foundation":"Your client foundation";
   const foundationSub = builder?"How intentionally you're building the relationships, visibility, and habits that become your team-and-client foundation.":"How intentionally you grow business through the clients you already have.";
 
-  app.innerHTML=`<div class="res">
-    <div class="eyebrow">Your BD Profile</div>
-    <div class="archeline"><h1 style="color:${headColor}">You're ${art} ${style}.</h1></div>
-    <div class="signature">${signatureLine(r)}</div>
-    ${(SHOW_POP_STAT&&POP_STAT_PCT[style.toLowerCase()])?`<div class="popstat">You're ${art} ${style}, like ${POP_STAT_PCT[style.toLowerCase()]}% of professional-services people who've taken this.</div>`:''}
-    ${blendBars(r)}
-    <p class="synth">${synth}</p>
-    <div class="frameBlock"><p>${fw[0]}</p>${pillarsFig(r.integrated?'power':r.primary, builder)}<p>${fw[1]}</p></div>
-    <div class="priority"><span class="plab">${pri[0]}</span>${pri[1]}</div>
-    <div class="panel"><h3>${foundationTitle}</h3><div class="sub">${foundationSub}</div>
+  app.innerHTML=`<div class="res reveal">
+    <div class="revealHero">
+      <div class="eyebrow">Your BD Profile</div>
+      <div class="archeline"><h1 style="color:${headColor}">You're ${art} ${style}.</h1></div>
+      <div class="signature">${signatureLine(r)}</div>
+      <div class="shareRow"><button id="shareBtn" class="shareBtn" onclick="shareStyle()" aria-haspopup="true">Share your style</button>
+        <div class="shareMenu" id="shareMenu" style="display:none">
+          <button class="shareOpt" onclick="shareTo('linkedin')">LinkedIn</button>
+          <button class="shareOpt" onclick="shareTo('x')">X</button>
+          <button class="shareOpt" id="copyBtn" onclick="shareTo('copy')">Copy link</button>
+        </div></div>
+    </div>
+    <div class="revealRest">
+    ${(SHOW_POP_STAT&&POP_STAT_PCT[style.toLowerCase()])?`<div class="popstat rvUp">You're ${art} ${style}, like ${POP_STAT_PCT[style.toLowerCase()]}% of professional-services people who've taken this.</div>`:''}
+    <div class="rvUp">${blendBars(r)}</div>
+    <div class="rvUp">${stylesCompare(r)}</div>
+    <p class="synth rvUp">${synth}</p>
+    <div class="frameBlock rvUp"><p>${fw[0]}</p>${pillarsFig(r.integrated?'power':r.primary, builder)}<p>${fw[1]}</p></div>
+    <div class="priority rvUp"><span class="plab">${pri[0]}</span>${pri[1]}</div>
+    <div class="panel rvUp"><h3>${foundationTitle}</h3><div class="sub">${foundationSub}</div>
       <div class="zoneName">${zoneName(z.name)}</div><div class="spectrum">${cells}</div><p class="nextrung">${z.next}</p></div>
-    <div class="panel"><h3>Your style lean</h3><div class="sub">Which pillar your energy points to when you extend beyond the foundation.</div><div class="ext">${extBars}</div></div>
-    <div class="panel"><h3>Your BD Battery</h3><div class="sub">How much plan you can carry right now, a blend of your appetite for BD and the time you actually have.</div>
+    <div class="panel rvUp"><h3>Your style lean</h3><div class="sub">Which pillar your energy points to when you extend beyond the foundation.</div><div class="ext">${extBars}</div></div>
+    <div class="panel rvUp"><h3>Your BD Battery</h3><div class="sub">How much plan you can carry right now, a blend of your appetite for BD and the time you actually have.</div>
       <div class="bbar"><i id="batFill" style="background:${bColor}"></i></div>
       <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:14px"><span style="font-weight:700;color:${bColor}">Battery, ${bLabel}</span></div>
       <div class="subbars"><div><div class="lab"><span>Appetite</span><span>${level3(r.appetite)}</span></div><div class="mini"><i class="appFill"></i></div><div style="font-size:12px;color:var(--muted);margin-top:4px">your energy and motivation for BD</div></div><div><div class="lab"><span>Capacity</span><span>${level3(r.capacity)}</span></div><div class="mini"><i class="capFill"></i></div><div style="font-size:12px;color:var(--muted);margin-top:4px">time left after the client work, the admin, and life</div></div></div>
       <p style="font-size:14.5px;color:var(--ink);margin-top:16px">${bRead}</p>
       <p style="font-size:14px;color:var(--ink);margin-top:10px"><b>Your capacity dictates where you spend smart BD time.</b> ${capacityGuide(r)}</p></div>
-    <div class="sectionLead">Where to start</div>
-    <div class="heroMove"><div class="tag">${hero.tag}</div><div class="txt">${hero.txt}</div></div>
-    <ul class="moves">${support.map((m,i)=>`<li><span class="pin">${i+1}</span><span><span class="ctx">${m.ctx}</span>${m.txt}</span></li>`).join('')}</ul>
-    <div class="useNote">This is a starting point to reduce friction. The creation of the structure to a shared conversation. Do it!</div>
-    <div class="ctaQuiet"><h4>Want the whole plan?</h4><p>The full playbook turns this into a sequenced plan with the tools, the activities, and a weekly rhythm, built for exactly how you're wired.</p>
+    <div class="sectionLead rvUp">Where to start</div>
+    <div class="heroMove rvUp"><div class="tag">${hero.tag}</div><div class="txt">${hero.txt}</div></div>
+    <ul class="moves rvUp">${support.map((m,i)=>`<li><span class="pin">${i+1}</span><span><span class="ctx">${m.ctx}</span>${m.txt}</span></li>`).join('')}</ul>
+    <div class="useNote rvUp">This is a starting point to reduce friction. The creation of the structure to a shared conversation. Do it!</div>
+    <div class="ctaQuiet rvUp"><h4>Want the whole plan?</h4><p>The full playbook turns this into a sequenced plan with the tools, the activities, and a weekly rhythm, built for exactly how you're wired.</p>
       <button class="btn" onclick="showGate()">See the full playbook</button><div id="savedMsg"></div></div>
+    <p class="resDisclaimer rvUp" style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:22px">${DISCLAIMER_TEXT}</p>
+    </div>
   </div>`;
 
   requestAnimationFrame(()=>setTimeout(()=>{
     const bf=document.getElementById('batFill');if(bf)bf.style.width=r.battery+'%';
     document.querySelectorAll('.appFill').forEach(e=>e.style.width=r.appetite+'%');
     document.querySelectorAll('.capFill').forEach(e=>e.style.width=r.capacity+'%');
-    document.querySelectorAll('.ext .track > i').forEach(e=>e.style.width=e.getAttribute('data-w')+'%');},120));
+    document.querySelectorAll('.ext .track > i').forEach(e=>e.style.width=e.getAttribute('data-w')+'%');
+    // Staged reveal (item 8): the rest flows in; instant + in-order under reduced motion.
+    const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ups=[].slice.call(document.querySelectorAll('.revealRest .rvUp'));
+    if(reduce){ ups.forEach(function(e){e.classList.add('rvIn');}); }
+    else { ups.forEach(function(el,i){ setTimeout(function(){el.classList.add('rvIn');}, 850+i*85); }); }
+  },120));
 }
 
 /* ---- lead payload (built from the results object) ---- */
@@ -1016,7 +1082,7 @@ function showGate(){
     <h1>Where should we<br>send your playbook?</h1>
     <p class="lead">Your complete, printable BD playbook, your profile, your plan, the worksheets, and the full reference banks, built for exactly how you're wired.</p>
     <div class="fields"><input id="gName" placeholder="First name" autocomplete="given-name"><input id="gEmail" type="email" placeholder="Email" autocomplete="email"></div>
-    <p class="micro" style="margin:2px 0 14px">We'll send your playbook and a couple of check-ins to help you do the thing. No spam, unsubscribe anytime.${PRIVACY_URL?` <a href="${PRIVACY_URL}" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">Privacy</a>.`:''}</p>
+    <p class="micro" style="margin:2px 0 14px">You'll get your playbook, plus a short series of emails to help you run it. Unsubscribe anytime. We don't sell or share your information.${PRIVACY_URL?` <a href="${PRIVACY_URL}" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline">Privacy Policy</a>.`:''}</p>
     ${builder?`<label class="waitlist"><input type="checkbox" id="gWait"> Join the waitlist for the community, for people doing this work.</label>`:''}
     <p id="gErr" class="micro" style="color:var(--rose);display:none">Please enter your name and a valid email.</p>
     <div class="nav" style="justify-content:flex-start;gap:12px">

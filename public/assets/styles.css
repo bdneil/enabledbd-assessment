@@ -1,4 +1,4 @@
-  /* EnabledBD brand palette — forest greens + gray (from the logo). Variable
+  /* EnabledBD brand palette: forest greens + gray (from the logo). Variable
      names kept (navy/gold/teal/rose) as semantic roles to avoid churn:
      navy=primary green · gold=accent green · teal=secondary green · rose=brand gray. */
   :root{--navy:#14541c;--navy-deep:#0f3d15;--gold:#346438;--teal:#64846c;--rose:#a6a6a6;--ink:#1e241e;--muted:#6f7a70;--paper:#f6f2ea;--card:#fff;--line:#e4e3d8;--mute-fill:#e8e7dd;--disp:'Fraunces',Georgia,serif;--body:'Hanken Grotesk',system-ui,sans-serif;}
@@ -188,4 +188,46 @@
     .pb{padding:0} .pbcover{break-after:page} .pbnum{break-after:avoid} .pbh{break-after:avoid} .pbsub{break-after:avoid} .pbp{orphans:2;widows:2} input.fin,textarea.fin{border:none;border-bottom:1px solid #bbb;border-radius:0;background:none} .bk,.eml,.bankgrp,.pbcard,.qrow{break-inside:avoid}
     .pbcard,.bankgrp,.nextcta,.stick .row{break-inside:avoid}
     .nextcta{background:#fff!important;color:var(--ink)!important;border:1.5px solid var(--navy)} .nextcta .ht{color:var(--ink)!important} .nextcta .sec{color:var(--muted)!important} .nextcta a{color:var(--navy)!important}
+  }
+
+  /* ===== Result reveal + share + compare (items 8 / 7 / compare) ===== */
+  @media screen{ .revealHero{min-height:calc(100vh - 150px);display:flex;flex-direction:column;justify-content:center;padding:8px 0} }
+  .revealHero .eyebrow,.revealHero .archeline,.revealHero .signature,.revealHero .shareRow{opacity:0;animation:rvIn .6s cubic-bezier(.2,.7,.2,1) forwards}
+  .revealHero .eyebrow{animation-delay:.05s}
+  .revealHero .archeline{animation-delay:.12s}
+  .revealHero .signature{animation-delay:.5s}
+  .revealHero .shareRow{animation-delay:.85s;text-align:center;margin-top:22px}
+  @keyframes rvIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .rvUp{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s ease}
+  .rvUp.rvIn{opacity:1;transform:none}
+  .shareBtn{font-family:var(--body);font-weight:600;font-size:14px;color:var(--navy);background:#fff;border:1.5px solid var(--navy);border-radius:99px;padding:10px 24px;cursor:pointer;transition:all .16s}
+  .shareBtn:hover{background:var(--navy);color:#fff}
+  .shareMenu{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  .shareOpt{font-family:var(--body);font-weight:600;font-size:13px;color:var(--navy);background:#fff;border:1.5px solid var(--line);border-radius:99px;padding:8px 18px;cursor:pointer;transition:all .16s}
+  .shareOpt:hover{border-color:var(--navy);background:var(--navy);color:#fff}
+  .reading{min-height:calc(100vh - 150px);display:flex;align-items:center;justify-content:center}
+  .readingInner{text-align:center}
+  .readingTxt{font-family:var(--disp);font-size:20px;color:var(--muted);margin-top:18px}
+  .readingDot{width:34px;height:34px;border-radius:99px;border:3px solid var(--line);border-top-color:var(--navy);margin:0 auto;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .stylesCompare{max-width:560px;margin:2px auto 26px}
+  .sc-lead{text-align:center;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .sc-grid{display:grid;grid-template-columns:1fr;gap:10px}
+  .scard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .scard.me{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
+  .sc-h{display:flex;align-items:center;gap:9px;font-size:15px}
+  .sc-pill{font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--muted);background:var(--mute-fill);border-radius:99px;padding:2px 9px;text-transform:uppercase}
+  .sc-you{margin-left:auto;font-size:11px;font-weight:700;color:#fff;background:var(--navy);border-radius:99px;padding:2px 10px;text-transform:uppercase;letter-spacing:.04em}
+  .sc-d{font-size:13.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+  .sc-note{text-align:center;font-size:13px;color:var(--muted);margin-top:12px}
+  @media (prefers-reduced-motion: reduce){
+    .revealHero{min-height:0}
+    .revealHero .eyebrow,.revealHero .archeline,.revealHero .signature,.revealHero .shareRow{animation:none;opacity:1}
+    .rvUp{opacity:1!important;transform:none!important;transition:none!important}
+    .reading{display:none} .res{animation:none} .readingDot{animation:none}
+  }
+  @media print{
+    .revealHero{min-height:0!important}
+    .revealHero .eyebrow,.revealHero .archeline,.revealHero .signature,.revealHero .shareRow{animation:none!important;opacity:1!important}
+    .rvUp{opacity:1!important;transform:none!important} .shareRow{display:none}
   }
