@@ -240,7 +240,7 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   await browser.close(); server.close();
 
   // ---- edge OG logic (item 6): decode a real ?r= to style, inject per-style tags ----
-  const oglib = await import('../netlify/edge-functions/og-lib.mjs');
+  const oglib = await import('../netlify/edge-functions/lib/og-lib.mjs');
   const HOST = 'https://preview.example.netlify.app';
   const indexHtml = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
   const ogStyleFromR = oglib.styleFromR(cap.encoded);

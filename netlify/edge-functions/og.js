@@ -2,7 +2,7 @@
 // share (?s=) links so social previews are personalized — style only, never
 // zone/battery/name. Defensive: ANY failure falls through to the original page,
 // so it can degrade to the generic card but never break page delivery.
-import { normalizeStyle, styleFromR, rewriteHtml } from './og-lib.mjs';
+import { normalizeStyle, styleFromR, rewriteHtml } from './lib/og-lib.mjs';
 
 export default async (request, context) => {
   const res = await context.next();
