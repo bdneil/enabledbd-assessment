@@ -7,7 +7,7 @@ const API_BASE = "";
 /* Launch config (§4). Flip SOURCE to 'live' at public launch, everything before
    that is 'tester' and must be excluded from population stats. Turn SHOW_POP_STAT
    on only once >=250 'live' rows exist; it ships dark. */
-const SOURCE = 'tester';
+const SOURCE = 'live';
 const INSTRUMENT = 'v4';
 const SHOW_POP_STAT = false;
 const POP_STAT_PCT = { connector:'', driver:'', educator:'', powerhouse:'' }; // filled when live data clears the floor
