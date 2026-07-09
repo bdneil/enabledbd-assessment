@@ -192,6 +192,9 @@
 
   /* ===== Landing / intro ===== */
   .intro{max-width:660px}
+  .whofor{max-width:58ch;margin:2px 0 4px}
+  .whotag{font-size:16px;font-weight:700;color:var(--ink);line-height:1.4;margin-bottom:6px}
+  .whoind{font-size:13.5px;color:var(--muted);line-height:1.7}
   .introFig{display:flex;justify-content:center;margin:8px 0 22px}
   .introFig svg{max-width:280px;height:auto}
   .getlist{margin:18px 0 24px;border-top:1px solid var(--line)}

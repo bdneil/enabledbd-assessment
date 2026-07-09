@@ -736,6 +736,10 @@ function renderIntro(){
     <div class="eyebrow">The 5-minute BD style assessment</div>
     <h1>You already know enough<br>people to grow.</h1>
     <p class="lead">Your next client is probably already in your phone. Find your BD style and the fastest place to start, in about five minutes.</p>
+    <div class="whofor">
+      <p class="whotag">Built for those that know how to do good work, but never trained to grow a book.</p>
+      <p class="whoind">Accountants · lawyers · consultants · financial services · engineers · architects · agencies · and every professional-services firm in between.</p>
+    </div>
     <div class="introFig">${BRANDMARK(132)}</div>
     <div class="getlist">
       <div class="getitem"><div class="gk">Your BD style</div><div class="gv">Connector, Driver, Educator, or Powerhouse.</div></div>
