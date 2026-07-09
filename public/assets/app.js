@@ -732,14 +732,20 @@ function getSequence(){
 
 function renderIntro(){
   pWrap.style.display='none';
-  app.innerHTML=`<div class="screen">
-    <div class="eyebrow">Business Development Profile for professionals in professional services firms</div>
-    <h1>Find out how<br>you're wired to grow business.</h1>
-    <p class="lead">A five-minute read on your natural business-development style, where your foundation stands, and the lowest-friction places to start.</p>
-    <div class="note"><strong>Answer as the real you</strong>, not the version you think you're supposed to be. There are no right answers. Your BD plan needs to be customized to you!</div>
+  app.innerHTML=`<div class="screen intro">
+    <div class="eyebrow">The 5-minute BD style assessment</div>
+    <h1>You already know enough<br>people to grow.</h1>
+    <p class="lead">Your next client is probably already in your phone. Find your BD style and the fastest place to start, in about five minutes.</p>
+    <div class="introFig">${BRANDMARK(132)}</div>
+    <div class="getlist">
+      <div class="getitem"><div class="gk">Your BD style</div><div class="gv">Connector, Driver, Educator, or Powerhouse.</div></div>
+      <div class="getitem"><div class="gk">Where you stand</div><div class="gv">Your client foundation, and how much to take on right now.</div></div>
+      <div class="getitem"><div class="gk">Your plan</div><div class="gv">A first move for this week, plus a full playbook built for how you work.</div></div>
+    </div>
+    <div class="chips"><span class="chipLbl">Which are you?</span><span class="chip">Connector</span><span class="chip">Driver</span><span class="chip">Educator</span><span class="chip">Powerhouse</span></div>
     <div class="fields"><select id="fIndustry"><option value="">Your industry (optional)</option><option>Accounting</option><option>Law</option><option>Consulting</option><option>Financial Services</option><option>Engineering / Architecture</option><option>Marketing / Agency</option><option>Other professional services</option></select></div>
-    <p class="micro">Optional, helps tailor your results. No email needed to see your profile.</p>
-    <button class="btn btn-primary" onclick="startQuiz()">Start the assessment →</button></div>`;
+    <p class="micro">Free · about 5 minutes · see your profile with no email.</p>
+    <button class="btn btn-primary" onclick="startQuiz()">Find your BD style →</button></div>`;
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 function shuffleStyleOptions(){STYLE.forEach(q=>{                 // kill primacy bias; scoring reads the option object, so order is safe
@@ -900,13 +906,12 @@ function shareStyle(){ const m=document.getElementById('shareMenu'); if(m) m.sty
 function shareTo(where){
   if(!lastR) return;
   track('share',{method:where,style:styleHeadline(lastR)});
-  const {url,text}=shareData();
+  const {url}=shareData();
   if(where==='linkedin') window.open('https://www.linkedin.com/sharing/share-offsite/?url='+encodeURIComponent(url),'_blank','noopener');
-  else if(where==='x') window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(url),'_blank','noopener');
   else if(where==='copy'){
-    const full=text+' '+url, c=document.getElementById('copyBtn');
-    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(full).then(()=>{if(c)c.textContent='Copied ✓';}).catch(()=>window.prompt('Copy your share link:',full));
-    else window.prompt('Copy your share link:', full);
+    const c=document.getElementById('copyBtn');
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(()=>{if(c)c.textContent='Link copied ✓';}).catch(()=>window.prompt('Copy your link:',url));
+    else window.prompt('Copy your link:', url);
   }
 }
 
@@ -956,7 +961,6 @@ function renderResults(r){
       <div class="shareRow"><button id="shareBtn" class="shareBtn" onclick="shareStyle()" aria-haspopup="true">Share your style</button>
         <div class="shareMenu" id="shareMenu" style="display:none">
           <button class="shareOpt" onclick="shareTo('linkedin')">LinkedIn</button>
-          <button class="shareOpt" onclick="shareTo('x')">X</button>
           <button class="shareOpt" id="copyBtn" onclick="shareTo('copy')">Copy link</button>
         </div></div>
     </div>

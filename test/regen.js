@@ -428,13 +428,10 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   checks.push(['item6 · OG never leaks zone/battery/name', !/og:[a-z]+"\s+content="[^"]*(Growth Partner|Emerging Developer|Rising Rainmaker|battery|Ava|Ben|Cara|Dev)/i.test(ogHtml)]);
   const sc = cap.shareCalls || [];
   const li = sc.find(u => /linkedin\.com\/sharing/.test(u)) || '';
-  const xx = sc.find(u => /twitter\.com\/intent/.test(u)) || '';
   const cp = sc.find(u => /^(COPY|PROMPT):/.test(u)) || '';
-  const xDec = decodeURIComponent(xx);
-  checks.push(['item7 · share button + explicit LinkedIn·X·Copy options', sumHtml.includes('id="shareBtn"') && sumHtml.includes("shareTo('linkedin')") && sumHtml.includes("shareTo('x')") && sumHtml.includes("shareTo('copy')")]);
+  checks.push(['item7 · share button + LinkedIn·Copy options (X removed)', sumHtml.includes('id="shareBtn"') && sumHtml.includes("shareTo('linkedin')") && sumHtml.includes("shareTo('copy')") && !sumHtml.includes("shareTo('x')")]);
   checks.push(['item7 · LinkedIn shares ?s= landing, no ?r=', /s%3Dconnector/.test(li) && !/r%3D/.test(li)]);
-  checks.push(['item7 · X shares ?s= + prefilled text, no ?r=', /s%3Dconnector/.test(xx) && xDec.includes("I'm a Connector.") && !/[?&]r=/.test(xDec)]);
-  checks.push(['item7 · Copy = "I\'m a Connector..." + ?s=, no ?r=', /:I'm a Connector\./.test(cp) && cp.includes('?s=connector') && !cp.includes('?r=')]);
+  checks.push(['item7 · Copy = clean ?s= link, no ?r=', cp.includes('?s=connector') && !cp.includes('?r=')]);
   checks.push(['compare · three-styles strip present', sumHtml.includes('stylesCompare') && sumHtml.includes('The three styles')]);
   checks.push(['compare · reader\'s style marked (you)', sumHtml.includes('sc-you')]);
   checks.push(['item8 · reveal hero + rest structure', sumHtml.includes('revealHero') && sumHtml.includes('revealRest')]);

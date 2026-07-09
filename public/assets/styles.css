@@ -190,6 +190,19 @@
     .nextcta{background:#fff!important;color:var(--ink)!important;border:1.5px solid var(--navy)} .nextcta .ht{color:var(--ink)!important} .nextcta .sec{color:var(--muted)!important} .nextcta a{color:var(--navy)!important}
   }
 
+  /* ===== Landing / intro ===== */
+  .intro{max-width:660px}
+  .introFig{display:flex;justify-content:center;margin:8px 0 22px}
+  .introFig svg{max-width:280px;height:auto}
+  .getlist{margin:18px 0 24px;border-top:1px solid var(--line)}
+  .getitem{display:flex;gap:16px;padding:13px 2px;border-bottom:1px solid var(--line);align-items:baseline}
+  .getitem .gk{flex:0 0 132px;font-weight:700;color:var(--navy);font-size:15px}
+  .getitem .gv{flex:1;color:var(--muted);font-size:14.5px;line-height:1.45}
+  .chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 26px}
+  .chipLbl{font-size:13px;color:var(--muted);font-weight:600;margin-right:4px}
+  .chip{font-size:13px;font-weight:700;color:var(--navy);background:#fff;border:1.5px solid var(--line);border-radius:99px;padding:5px 14px}
+  @media (max-width:480px){ .getitem{flex-direction:column;gap:3px} .getitem .gk{flex:none} }
+
   /* ===== Result reveal + share + compare (items 8 / 7 / compare) ===== */
   @media screen{ .revealHero{min-height:calc(100vh - 150px);display:flex;flex-direction:column;justify-content:center;padding:8px 0} }
   .revealHero .eyebrow,.revealHero .archeline,.revealHero .signature,.revealHero .shareRow{opacity:0;animation:rvIn .6s cubic-bezier(.2,.7,.2,1) forwards}
