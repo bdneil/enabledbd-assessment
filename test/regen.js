@@ -248,6 +248,7 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   const ogFullUrl = HOST + '/?r=' + cap.encoded;
   const ogHtml = oglib.rewriteHtml(indexHtml, HOST, ogStyleFromR, ogFullUrl);
   const genpdfSrc = fs.readFileSync(path.join(ROOT, 'netlify/functions/generate-pdf.js'), 'utf8');
+  const appSrc = fs.readFileSync(path.join(ROOT, 'public/assets/app.js'), 'utf8');
 
   // Feed the intercepted gate payload through capture-lead with a MOCK sheet endpoint,
   // proving the raw style scores land in a sheet row (destination-agnostic).
@@ -411,6 +412,8 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   checks.push(['item3 · gate Privacy Policy link → privacy-policy/', cap.gate.includes('privacy-policy/') && cap.gate.includes('>Privacy Policy</a>')]);
   checks.push(['item4 · copyright in SITE footer', indexHtml.includes('© 2026 EnabledBD. All rights reserved.')]);
   checks.push(['item4 · copyright in PDF footer', genpdfSrc.includes('© 2026 EnabledBD. All rights reserved.')]);
+  checks.push(['analytics · GA4 tag in index.html', indexHtml.includes('G-73GN50DX5B') && indexHtml.includes('gtag/js')]);
+  checks.push(['analytics · funnel events wired (start/complete/gate/share)', ["track('assessment_start'","track('assessment_complete'","track('gate_submit'","track('share'"].every(e => appSrc.includes(e))]);
   const shareImgs = ['connector','driver','educator','powerhouse','generic'];
   const missingImgs = shareImgs.filter(s => !fs.existsSync(path.join(ROOT,'public/static/share',s+'.png')));
   checks.push(['item5 · five share images exist', missingImgs.length===0]);

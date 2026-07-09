@@ -746,7 +746,9 @@ function shuffleStyleOptions(){STYLE.forEach(q=>{                 // kill primac
   if(q.id==='S0'){const none=q.opts.filter(o=>o.none),rest=shuffle(q.opts.filter(o=>!o.none));q.opts=[...rest,...none];}
   else shuffle(q.opts);
 });}
-function startQuiz(){user.industry=(document.getElementById('fIndustry')||{}).value||"";shuffleStyleOptions();pos=0;renderQuestion();}
+/* GA4 funnel events — guarded so it never errors when analytics is absent/blocked (or in tests). */
+function track(name,params){ try{ if(window.gtag) window.gtag('event',name,params||{}); }catch(_){} }
+function startQuiz(){track('assessment_start');user.industry=(document.getElementById('fIndustry')||{}).value||"";shuffleStyleOptions();pos=0;renderQuestion();}
 
 function renderQuestion(){
   const seq=getSequence(); const q=seq[pos];
@@ -835,6 +837,7 @@ function computeResults(){
 }
 function finish(){
   lastR=computeResults();
+  track('assessment_complete',{style:styleHeadline(lastR),track:lastR.track});
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduce){ renderResults(lastR); return; }               // no transition theater under reduced motion
   pWrap.style.display='none';
@@ -896,6 +899,7 @@ function shareData(){
 function shareStyle(){ const m=document.getElementById('shareMenu'); if(m) m.style.display=(m.style.display==='flex'?'none':'flex'); }
 function shareTo(where){
   if(!lastR) return;
+  track('share',{method:where,style:styleHeadline(lastR)});
   const {url,text}=shareData();
   if(where==='linkedin') window.open('https://www.linkedin.com/sharing/share-offsite/?url='+encodeURIComponent(url),'_blank','noopener');
   else if(where==='x') window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+'&url='+encodeURIComponent(url),'_blank','noopener');
@@ -1099,6 +1103,7 @@ function submitGate(){
   const email=((document.getElementById('gEmail')||{}).value||'').trim();
   if(!name||!validEmail(email)){const er=document.getElementById('gErr');if(er)er.style.display='block';return;}
   user.name=name; user.email=email;
+  track('gate_submit',{style:styleHeadline(lastR),track:lastR.track});
   const w=document.getElementById('gWait'); user.waitlist=!!(w&&w.checked);
   user.playbookUrl=playbookUrlFor(lastR);            // stateless link → HighLevel playbook_url + emailable
   try{ history.replaceState(null,'',user.playbookUrl); }catch(_){}  // shareable URL in the address bar
