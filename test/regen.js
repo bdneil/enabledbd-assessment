@@ -245,7 +245,8 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   const indexHtml = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
   const ogStyleFromR = oglib.styleFromR(cap.encoded);
   const ogFromS = oglib.normalizeStyle('powerhouse');
-  const ogHtml = oglib.rewriteHtml(indexHtml, HOST, ogStyleFromR);
+  const ogFullUrl = HOST + '/?r=' + cap.encoded;
+  const ogHtml = oglib.rewriteHtml(indexHtml, HOST, ogStyleFromR, ogFullUrl);
   const genpdfSrc = fs.readFileSync(path.join(ROOT, 'netlify/functions/generate-pdf.js'), 'utf8');
 
   // Feed the intercepted gate payload through capture-lead with a MOCK sheet endpoint,
@@ -420,6 +421,7 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   checks.push(['item6 · edge injects per-style og:image', ogHtml.includes(HOST+'/static/share/connector.png')]);
   checks.push(['item6 · edge injects per-style og:title', ogHtml.includes('content="You\'re a Connector."')]);
   checks.push(['item6 · edge rewrites host (no hardcoded domain left)', !ogHtml.includes('https://assessment.enabledbd.com')]);
+  checks.push(['item6 · edge sets og:url to the shared URL (canonical match)', ogHtml.includes('property="og:url" content="' + ogFullUrl + '"')]);
   checks.push(['item6 · OG never leaks zone/battery/name', !/og:[a-z]+"\s+content="[^"]*(Growth Partner|Emerging Developer|Rising Rainmaker|battery|Ava|Ben|Cara|Dev)/i.test(ogHtml)]);
   const sc = cap.shareCalls || [];
   const li = sc.find(u => /linkedin\.com\/sharing/.test(u)) || '';

@@ -15,7 +15,7 @@ export default async (request, context) => {
     let style = normalizeStyle(url.searchParams.get('s'));
     if (!style && url.searchParams.get('r')) style = styleFromR(url.searchParams.get('r'));
 
-    const html = rewriteHtml(await res.text(), host, style);
+    const html = rewriteHtml(await res.text(), host, style, url.href);
     const headers = new Headers(res.headers);
     headers.delete('content-length');
     return new Response(html, { status: res.status, headers });

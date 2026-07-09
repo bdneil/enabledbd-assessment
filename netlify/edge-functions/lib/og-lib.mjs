@@ -51,9 +51,12 @@ export function setMeta(html, key, val) {
 
 // Rewrite the served HTML: (1) point absolute OG urls at the ACTUAL host so
 // previews work on the *.netlify.app preview and the final domain alike;
-// (2) if a style is known, swap in the per-style tags. Style-only, always.
-export function rewriteHtml(html, host, style) {
+// (2) point og:url at the ACTUAL requested URL (with ?s=/?r=), so scrapers that
+//     canonicalize via og:url don't fall back to the bare landing's card.
+// (3) if a style is known, swap in the per-style tags. Style-only, always.
+export function rewriteHtml(html, host, style, fullUrl) {
   html = html.split('https://assessment.enabledbd.com').join(host);
+  if (fullUrl) html = setMeta(html, 'og:url', fullUrl);
   if (style) {
     const tags = ogTags(style, host);
     for (const k in tags) html = setMeta(html, k, tags[k]);
