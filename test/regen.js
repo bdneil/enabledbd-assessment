@@ -414,6 +414,17 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   checks.push(['item4 · copyright in PDF footer', genpdfSrc.includes('© 2026 EnabledBD. All rights reserved.')]);
   checks.push(['analytics · GA4 tag in index.html', indexHtml.includes('G-73GN50DX5B') && indexHtml.includes('gtag/js')]);
   checks.push(['analytics · funnel events wired (start/complete/gate/share)', ["track('assessment_start'","track('assessment_complete'","track('gate_submit'","track('share'"].every(e => appSrc.includes(e))]);
+  // ---- privacy / consent hardening ----
+  let decodedPayload = {};
+  try { decodedPayload = JSON.parse(Buffer.from(cap.encoded.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (_) {}
+  checks.push(['privacy · ?r= payload has NO name (nm removed)', !('nm' in decodedPayload) && !JSON.stringify(decodedPayload).includes(ocFx.user.name)]);
+  checks.push(['privacy · GA consent default DENIED + no auto-config', indexHtml.includes("consent','default'") && indexHtml.includes("analytics_storage:'denied'") && !indexHtml.includes("gtag('config'")]);
+  checks.push(['privacy · GA clean paths (/result,/playbook) + send_page_view:false', appSrc.includes("gaSet('/result'") && appSrc.includes("gaSet('/playbook'") && appSrc.includes('send_page_view:false')]);
+  checks.push(['privacy · every hit pins clean page_location (not window.location)', appSrc.includes('page_location:loc,page_path:gaPath')]);
+  checks.push(['consent · banner text + one-click Accept/Decline', appSrc.includes('We use one analytics cookie to understand how people use this assessment. No ads, no selling data.') && appSrc.includes('consentAccept()') && appSrc.includes('consentDecline()')]);
+  checks.push(['consent · choice persisted ~12mo (localStorage + TTL)', appSrc.includes('CONSENT_TTL') && appSrc.includes('localStorage')]);
+  checks.push(['item4 · Terms & Conditions link in footer', indexHtml.includes('terms-and-conditions/') && indexHtml.includes('Terms &amp; Conditions')]);
+  checks.push(['item4 · Privacy Policy link in footer (static, every state)', indexHtml.includes('privacy-policy/') && indexHtml.includes('>Privacy Policy</a>')]);
   const shareImgs = ['connector','driver','educator','powerhouse','generic'];
   const missingImgs = shareImgs.filter(s => !fs.existsSync(path.join(ROOT,'public/static/share',s+'.png')));
   checks.push(['item5 · five share images exist', missingImgs.length===0]);

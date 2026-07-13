@@ -394,6 +394,7 @@ function weekCalendar(r){
 }
 function renderPlaybook(r){
   pWrap.style.display='none';
+  gaSet('/playbook','Your BD Playbook');
   const builder=r.track==='builder';
   const styleKey=r.integrated?'power':r.primary;
   const plan=buildPlan(r), pname=profileName(r);
@@ -732,6 +733,7 @@ function getSequence(){
 
 function renderIntro(){
   pWrap.style.display='none';
+  gaSet('/','EnabledBD: BD Assessment');
   app.innerHTML=`<div class="screen intro">
     <div class="eyebrow">The 5-minute BD style assessment</div>
     <h1>You already know enough<br>people to grow.</h1>
@@ -756,9 +758,34 @@ function shuffleStyleOptions(){STYLE.forEach(q=>{                 // kill primac
   if(q.id==='S0'){const none=q.opts.filter(o=>o.none),rest=shuffle(q.opts.filter(o=>!o.none));q.opts=[...rest,...none];}
   else shuffle(q.opts);
 });}
-/* GA4 funnel events — guarded so it never errors when analytics is absent/blocked (or in tests). */
-function track(name,params){ try{ if(window.gtag) window.gtag('event',name,params||{}); }catch(_){} }
-function startQuiz(){track('assessment_start');user.industry=(document.getElementById('fIndustry')||{}).value||"";shuffleStyleOptions();pos=0;renderQuestion();}
+/* ---- Analytics + consent (GA4 + Consent Mode v2, basic gating) ----
+   GA is dark until the visitor accepts. Every hit reports a CLEAN path
+   (/result, /playbook, …) so the encoded ?r= payload never reaches Google. */
+const GA_ID='G-73GN50DX5B', CONSENT_KEY='ebd_consent', CONSENT_TTL=365*24*3600*1000; // ~12 months
+let gaActive=false, gaPath='/', gaTitle='EnabledBD: BD Assessment';
+function _gtag(){ try{ if(window.gtag) window.gtag.apply(null,arguments); }catch(_){} }
+function gaHit(){ const loc=location.origin+gaPath; _gtag('set',{page_location:loc,page_path:gaPath,page_title:gaTitle}); _gtag('event','page_view',{page_location:loc,page_path:gaPath,page_title:gaTitle}); }
+function gaSet(path,title){ gaPath=path; if(title)gaTitle=title; if(gaActive) gaHit(); }   // clean per-screen path — never the ?r= URL
+function initGA(){ if(gaActive) return; const loc=location.origin+gaPath;
+  _gtag('consent','update',{analytics_storage:'granted'});
+  // page_location/page_path/page_title as CONFIG DEFAULTS so even auto events (session_start,
+  // first_visit) use the clean path, never document.location (the ?r= URL).
+  _gtag('config',GA_ID,{send_page_view:false,page_location:loc,page_path:gaPath,page_title:gaTitle});
+  gaActive=true; gaHit(); }
+function track(name,params){ if(!gaActive) return; const loc=location.origin+gaPath; _gtag('event',name,Object.assign({page_location:loc,page_path:gaPath,page_title:gaTitle},params||{})); }
+function consentChoice(){ try{ const s=JSON.parse(localStorage.getItem(CONSENT_KEY)||'null'); if(s&&s.t&&(Date.now()-s.t)<CONSENT_TTL) return s.v; }catch(_){} return null; }
+function setConsent(v){ try{ localStorage.setItem(CONSENT_KEY,JSON.stringify({v,t:Date.now()})); }catch(_){} }
+function consentAccept(){ setConsent('granted'); hideConsentBar(); initGA(); }
+function consentDecline(){ setConsent('denied'); hideConsentBar(); }   // GA stays dark
+function hideConsentBar(){ const b=document.getElementById('consentBar'); if(b)b.remove(); document.body.classList.remove('consent-open'); }
+function showConsentBar(){
+  if(document.getElementById('consentBar')) return;
+  const bar=document.createElement('div'); bar.id='consentBar'; bar.className='consentBar';
+  bar.innerHTML='<div class="consentTxt">We use one analytics cookie to understand how people use this assessment. No ads, no selling data.</div>'+
+    '<div class="consentBtns"><button class="cbtn cbtn-accept" onclick="consentAccept()">Accept</button><button class="cbtn cbtn-decline" onclick="consentDecline()">Decline</button></div>';
+  document.body.appendChild(bar); document.body.classList.add('consent-open');
+}
+function startQuiz(){gaSet('/assessment','Assessment');track('assessment_start');user.industry=(document.getElementById('fIndustry')||{}).value||"";shuffleStyleOptions();pos=0;renderQuestion();}
 
 function renderQuestion(){
   const seq=getSequence(); const q=seq[pos];
@@ -921,6 +948,7 @@ function shareTo(where){
 
 function renderResults(r){
   pWrap.style.display='none';pBar.style.width='100%';
+  gaSet('/result','Your BD Profile');
   const z=r.zone, builder=r.track==='builder';
   const style=styleHeadline(r), art=styleArticle(style), headColor='#14541c';
 
@@ -1016,7 +1044,7 @@ function encodeResult(r){
   const round=v=>Math.round(v*10)/10;
   const d={t:r.track,e:[round(r.ext.connector),round(r.ext.driver),round(r.ext.educator)],
     m:r.maturity,ap:r.appetite,cap:r.capacity,b:r.battery,cd:r.cadence==='opportunistic'?1:0,
-    so:r.solo?1:0,nr:r.noneRecent?1:0,ig:r.integrated?1:0,dc:r.discrepancy||'',nm:user.name||'',ind:user.industry||''};
+    so:r.solo?1:0,nr:r.noneRecent?1:0,ig:r.integrated?1:0,dc:r.discrepancy||'',ind:user.industry||''};   // no name in the URL (privacy)
   return btoa(unescape(encodeURIComponent(JSON.stringify(d)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 function decodeResult(s){
@@ -1087,6 +1115,7 @@ function subscribeNewsletter(e,el){ tagCTA(e,el,'newsletter','Subscribed ✓'); 
 function validEmail(s){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);}
 function showGate(){
   if(!lastR) return;
+  gaSet('/gate','Get your playbook');
   pWrap.style.display='none';
   const builder=lastR.track==='builder';
   app.innerHTML=`<div class="screen">
@@ -1122,7 +1151,11 @@ function submitGate(){
    with no session or database; otherwise start the assessment. */
 function init(){
   const enc=new URLSearchParams(location.search).get('r');
-  if(enc){ const d=decodeResult(enc); if(d&&d.e){ user.name=d.nm||''; user.industry=d.ind||''; lastR=rebuildResults(d); renderPlaybook(lastR); return; } }
-  renderIntro();
+  if(enc){ const d=decodeResult(enc); if(d&&d.e){ user.name=d.nm||''; user.industry=d.ind||''; lastR=rebuildResults(d); renderPlaybook(lastR); } else { renderIntro(); } }
+  else { renderIntro(); }
+  // Consent: GA only after an explicit choice. Render first (sets the clean path), then decide.
+  const c=consentChoice();
+  if(c==='granted') initGA();
+  else if(c!=='denied') showConsentBar();
 }
 init();

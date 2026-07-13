@@ -190,6 +190,17 @@
     .nextcta{background:#fff!important;color:var(--ink)!important;border:1.5px solid var(--navy)} .nextcta .ht{color:var(--ink)!important} .nextcta .sec{color:var(--muted)!important} .nextcta a{color:var(--navy)!important}
   }
 
+  /* ===== Cookie consent bar ===== */
+  .consentBar{position:fixed;left:0;right:0;bottom:0;z-index:300;background:var(--navy);color:#fff;padding:13px 20px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;box-shadow:0 -4px 22px -10px rgba(0,0,0,.4)}
+  .consentTxt{font-size:13.5px;max-width:56ch;line-height:1.45}
+  .consentBtns{display:flex;gap:10px;flex:none}
+  .cbtn{font-family:var(--body);font-weight:700;font-size:13px;border-radius:8px;padding:9px 22px;cursor:pointer;border:1.5px solid #fff;transition:opacity .15s}
+  .cbtn-accept{background:#fff;color:var(--navy)}
+  .cbtn-decline{background:transparent;color:#fff}
+  .cbtn:hover{opacity:.85}
+  body.consent-open{padding-bottom:96px}
+  @media (max-width:560px){ .consentBar{flex-direction:column;gap:10px;text-align:center;padding:14px 16px} .consentBtns{width:100%} .cbtn{flex:1} body.consent-open{padding-bottom:154px} }
+
   /* ===== Landing / intro ===== */
   .intro{max-width:660px}
   .whofor{max-width:58ch;margin:2px 0 4px}
