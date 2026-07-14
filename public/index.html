@@ -15,9 +15,9 @@
 <meta name="twitter:title" content="What's your BD style?">
 <meta name="twitter:description" content="A free self-assessment for professionals who'd rather have a plan than a personality test. ~5 minutes.">
 <meta name="twitter:image" content="https://assessment.enabledbd.com/static/share/generic.png">
-<!-- Google Analytics 4 with Consent Mode v2. Defaults DENIED; GA is NOT configured
-     (no cookies, no hits) until the visitor accepts — see initGA() in app.js. -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-73GN50DX5B"></script>
+<!-- Google Analytics 4 with Consent Mode v2. Consent defaults DENIED and the gtag.js
+     library itself is NOT loaded until the visitor accepts (see initGA() in app.js),
+     so ZERO requests reach Google before consent — not even the library fetch. -->
 <script>
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
 gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied'});

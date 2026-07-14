@@ -767,6 +767,8 @@ function _gtag(){ try{ if(window.gtag) window.gtag.apply(null,arguments); }catch
 function gaHit(){ const loc=location.origin+gaPath; _gtag('set',{page_location:loc,page_path:gaPath,page_title:gaTitle}); _gtag('event','page_view',{page_location:loc,page_path:gaPath,page_title:gaTitle}); }
 function gaSet(path,title){ gaPath=path; if(title)gaTitle=title; if(gaActive) gaHit(); }   // clean per-screen path — never the ?r= URL
 function initGA(){ if(gaActive) return; const loc=location.origin+gaPath;
+  // Load the GA library only NOW — before consent, nothing (not even this fetch) reaches Google.
+  if(!document.getElementById('ga-lib')){ const s=document.createElement('script'); s.id='ga-lib'; s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID; document.head.appendChild(s); }
   _gtag('consent','update',{analytics_storage:'granted'});
   // page_location/page_path/page_title as CONFIG DEFAULTS so even auto events (session_start,
   // first_visit) use the clean path, never document.location (the ?r= URL).

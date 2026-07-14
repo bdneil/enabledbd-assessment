@@ -412,7 +412,8 @@ function coverOf(pb)    { const m = pb.match(/class="pbcover"[\s\S]*?<h1[^>]*>(Y
   checks.push(['item3 · gate Privacy Policy link → privacy-policy/', cap.gate.includes('privacy-policy/') && cap.gate.includes('>Privacy Policy</a>')]);
   checks.push(['item4 · copyright in SITE footer', indexHtml.includes('© 2026 EnabledBD. All rights reserved.')]);
   checks.push(['item4 · copyright in PDF footer', genpdfSrc.includes('© 2026 EnabledBD. All rights reserved.')]);
-  checks.push(['analytics · GA4 tag in index.html', indexHtml.includes('G-73GN50DX5B') && indexHtml.includes('gtag/js')]);
+  checks.push(['analytics · GA4 configured (ID + library injected in app.js)', appSrc.includes('G-73GN50DX5B') && appSrc.includes('googletagmanager.com/gtag/js')]);
+  checks.push(['privacy · GA library NOT loaded before consent (deferred from index.html)', !indexHtml.includes('gtag/js')]);
   checks.push(['analytics · funnel events wired (start/complete/gate/share)', ["track('assessment_start'","track('assessment_complete'","track('gate_submit'","track('share'"].every(e => appSrc.includes(e))]);
   // ---- privacy / consent hardening ----
   let decodedPayload = {};
